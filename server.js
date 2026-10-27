@@ -1,33 +1,28 @@
 
 const express = require('express');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yaml');
-const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const PORT = 9000;
 
 const specPath = path.join(__dirname, 'quickpay-openapi.yaml');
-const openApiDocument = YAML.parse(
-  fs.readFileSync(specPath, 'utf8')
-);
-
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(openApiDocument)
-);
+const distPath = path.join(__dirname, 'dist');
 
 app.get('/openapi.yaml', (req, res) => {
-  res.sendFile(specPath);
+  res.type('text/yaml').sendFile(specPath);
 });
 
-app.get('/', (req, res) => {
-  res.redirect('/api-docs');
+app.get('/health', (req, res) => {
+  res.json({ status: 'UP' });
+});
+
+app.use(express.static(distPath));
+
+app.get('*path', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`QuickPay Swagger: http://localhost:${PORT}`);
+  console.log(`QuickPay API docs: http://localhost:${PORT}`);
   console.log(`OpenAPI YAML: http://localhost:${PORT}/openapi.yaml`);
 });
